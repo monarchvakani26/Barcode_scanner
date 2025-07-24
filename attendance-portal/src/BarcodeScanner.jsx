@@ -15,7 +15,17 @@ const BarcodeScanner = ({ onDetected }) => {
     const hints = new Map();
     hints.set(DecodeHintType.POSSIBLE_FORMATS, [
         BarcodeFormat.CODE_128, // UNCOMMENTED: This is likely for your ID card
-        BarcodeFormat.QR_CODE, // Often good to include QR_CODE for image scanning
+        BarcodeFormat.QR_CODE,
+        // BarcodeFormat.CODE_128,
+        // BarcodeFormat.QR_CODE,
+        BarcodeFormat.EAN_13,      // European Article Number (common for products)
+        BarcodeFormat.CODE_39,     // Another common industrial/ID barcode
+        BarcodeFormat.ITF,         // Interleaved 2 of 5
+        BarcodeFormat.UPC_A,       // Universal Product Code
+        BarcodeFormat.CODABAR,     // Used in libraries, blood banks, etc.
+        BarcodeFormat.DATA_MATRIX, // 2D barcode
+        BarcodeFormat.AZTEC,       // 2D barcode
+        BarcodeFormat.PDF_417, // Often good to include QR_CODE for image scanning
         // Add other formats you expect if necessary (e.g., BarcodeFormat.EAN_13, BarcodeFormat.CODE_39)
     ]);
     return hints;
