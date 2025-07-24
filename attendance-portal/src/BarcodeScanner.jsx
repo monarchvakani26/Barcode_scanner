@@ -48,12 +48,8 @@ const BarcodeScanner = ({ onDetected }) => {
       const videoInputDevices = await codeReader.current.listVideoInputDevices();
       console.log("Detected video input devices:", videoInputDevices); // Added for debugging
       if (videoInputDevices.length > 0) {
-        // Use the first available camera. You could add logic here
-        // to let the user select a camera if multiple exist.
         const deviceId = videoInputDevices[0].deviceId;
 
-        // Define video constraints for a common resolution, prioritizing 'environment' (rear camera)
-        // Removed ideal width/height to let the browser pick optimal default, as suggested in tips
         const constraints = {
           video: {
             deviceId: deviceId,
@@ -61,45 +57,67 @@ const BarcodeScanner = ({ onDetected }) => {
           }
         };
 
-        // Added a check for videoRef.current readiness to prevent race conditions
-        if (videoRef.current && videoRef.current.readyState >= 1) {
-          codeReader.current.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
-            if (result) {
-              onDetected(result.getText()); // Send the decoded text back to App.jsx
-              // Optionally stop camera after successful scan:
-              // stopCamera();
-            }
-            if (err && !err.toString().includes('NotFoundException')) {
-              // NotFoundException is normal when no barcode is in view
-              console.error("Scanner Error (from decodeFromVideoDevice callback):", err); // Enhanced logging
-              setError("Error during scanning. Make sure the barcode is clear.");
-            }
-          }, constraints); // Pass constraints here
-          setIsScanning(true); // Scanning has successfully started
+        // NEW: Use onloadedmetadata to ensure video element is truly ready
+        const onVideoReady = () => {
+          if (videoRef.current) {
+            videoRef.current.removeEventListener('loadedmetadata', onVideoReady); // Remove listener to prevent multiple calls
+            codeReader.current.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
+              if (result) {
+                onDetected(result.getText());
+                // Optionally stop camera after successful scan:
+                // stopCamera();
+              }
+              if (err && !err.toString().includes('NotFoundException')) {
+                console.error("Scanner Error (from decodeFromVideoDevice callback):", err);
+                setError("Error during scanning. Make sure the barcode is clear.");
+              }
+            }, constraints);
+            setIsScanning(true);
+          }
+        };
+
+        if (videoRef.current) {
+          // Add event listener for when video metadata is loaded
+          videoRef.current.addEventListener('loadedmetadata', onVideoReady);
+          // Set srcObject to start stream, onloadedmetadata will then trigger decode
+          navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+              videoRef.current.srcObject = stream;
+              videoRef.current.play(); // Explicitly try to play the video
+              console.log("Camera stream assigned to video element.");
+            })
+            .catch(err => {
+              console.error("Error getting user media:", err);
+              setError("Could not access camera. Please check permissions.");
+              setIsCameraActive(false);
+            });
         } else {
-          // If videoRef is not ready, try again after a short delay
-          // This addresses the "Rendering Race Condition" directly
-          console.warn("videoRef.current not ready, retrying startCamera in 100ms...");
+          // Fallback if videoRef is somehow null right after component render
+          console.warn("videoRef.current is null, retrying startCamera in 100ms...");
           setTimeout(startCamera, 100);
         }
       } else {
         setError("No video input devices found.");
-        setIsCameraActive(false); // Camera could not be activated
+        setIsCameraActive(false);
       }
     } catch (err) {
-      console.error("Camera access error (from startCamera catch block):", err); // Enhanced logging
+      console.error("Camera access error (from startCamera catch block):", err);
       setError("Error accessing camera. Please ensure permissions are granted.");
-      setIsCameraActive(false); // Camera could not be activated
+      setIsCameraActive(false);
     }
   };
 
   // Function to stop the camera
   const stopCamera = () => {
-    codeReader.current.reset(); // Stop scanning and turn off camera
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    codeReader.current.reset();
     setIsScanning(false);
     setIsCameraActive(false);
-    setError(null); // Clear any previous errors
-    setImageScanMessage(""); // Clear image scan message
+    setError(null);
+    setImageScanMessage("");
   };
 
   // Function to handle image file selection
@@ -144,7 +162,6 @@ const BarcodeScanner = ({ onDetected }) => {
 
   // Effect to clean up when component unmounts
   useEffect(() => {
-    // This effect will only handle cleanup. Starting/stopping is now controlled by buttons.
     return () => {
       stopCamera(); // Ensure camera is off when component unmounts
     };
