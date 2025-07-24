@@ -13,20 +13,23 @@ const BarcodeScanner = ({ onDetected }) => {
   // Memoize the hints creation to avoid recreating on every render
   const getHints = useCallback(() => {
     const hints = new Map();
+    // IMPORTANT: Expanded list of possible barcode formats to increase detection success
     hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-        BarcodeFormat.CODE_128, // UNCOMMENTED: This is likely for your ID card
-        BarcodeFormat.QR_CODE,
-        // BarcodeFormat.CODE_128,
-        // BarcodeFormat.QR_CODE,
-        BarcodeFormat.EAN_13,      // European Article Number (common for products)
-        BarcodeFormat.CODE_39,     // Another common industrial/ID barcode
-        BarcodeFormat.ITF,         // Interleaved 2 of 5
-        BarcodeFormat.UPC_A,       // Universal Product Code
-        BarcodeFormat.CODABAR,     // Used in libraries, blood banks, etc.
-        BarcodeFormat.DATA_MATRIX, // 2D barcode
-        BarcodeFormat.AZTEC,       // 2D barcode
-        BarcodeFormat.PDF_417, // Often good to include QR_CODE for image scanning
-        // Add other formats you expect if necessary (e.g., BarcodeFormat.EAN_13, BarcodeFormat.CODE_39)
+        BarcodeFormat.CODE_128,      // Very common for ID cards, shipping, logistics
+        BarcodeFormat.QR_CODE,       // Common for links, contact info, general data
+        BarcodeFormat.EAN_13,        // European Article Number (standard for retail products)
+        BarcodeFormat.UPC_A,         // Universal Product Code (standard for retail products in North America)
+        BarcodeFormat.CODE_39,       // Older, simpler barcode, often used in inventory
+        BarcodeFormat.ITF,           // Interleaved 2 of 5 (used in warehousing, logistics)
+        BarcodeFormat.CODABAR,       // Used in libraries, blood banks, logistics
+        BarcodeFormat.DATA_MATRIX,   // 2D barcode, compact data storage
+        BarcodeFormat.AZTEC,         // 2D barcode, often used in transportation
+        BarcodeFormat.PDF_417,       // Stacked linear barcode, used in ID cards, postal services
+        BarcodeFormat.EAN_8,         // Shorter version of EAN-13
+        BarcodeFormat.UPC_E,         // Shorter version of UPC-A
+        BarcodeFormat.CODE_93,       // Similar to Code 39, more efficient
+        BarcodeFormat.RSS_14,        // GS1 DataBar, used in retail
+        BarcodeFormat.RSS_EXPANDED,  // GS1 DataBar Expanded
     ]);
     return hints;
   }, []);
