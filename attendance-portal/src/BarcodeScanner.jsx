@@ -54,13 +54,27 @@ const BarcodeScanner = ({ onDetected }) => {
 
         // Define video constraints for a common resolution
         const constraints = {
-          video: {
-            deviceId: deviceId,
-            width: { ideal: 640 }, // Try a common ideal width
-            height: { ideal: 480 }, // Try a common ideal height
-            facingMode: "environment" // Prefer rear camera on mobile
-          }
-        };
+            video: {
+              deviceId,
+              width: { ideal: 1280 }, // Higher resolution helps decode finer barcodes
+              height: { ideal: 720 },
+              facingMode: "environment"
+            }
+          };
+
+          setTimeout(() => {
+            codeReader.current.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
+              if (result) {
+                onDetected(result.getText());
+              }
+              if (err && !err.toString().includes("NotFoundException")) {
+                console.error("Scanner Error:", err);
+                setError("Error during scanning. Make sure the barcode is clear.");
+              }
+            }, constraints);
+          }, 1000);
+          
+          
 
         codeReader.current.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
           if (result) {
