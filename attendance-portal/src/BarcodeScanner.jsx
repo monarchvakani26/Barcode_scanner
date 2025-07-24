@@ -46,10 +46,22 @@ const BarcodeScanner = ({ onDetected }) => {
 
     try {
       const videoInputDevices = await codeReader.current.listVideoInputDevices();
+      console.log("Detected video input devices:", videoInputDevices); // Added for debugging
       if (videoInputDevices.length > 0) {
         // Use the first available camera. You could add logic here
         // to let the user select a camera if multiple exist.
         const deviceId = videoInputDevices[0].deviceId;
+
+        // Define video constraints for a common resolution
+        const constraints = {
+          video: {
+            deviceId: deviceId,
+            width: { ideal: 640 }, // Try a common ideal width
+            height: { ideal: 480 }, // Try a common ideal height
+            facingMode: "environment" // Prefer rear camera on mobile
+          }
+        };
+
         codeReader.current.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
           if (result) {
             onDetected(result.getText()); // Send the decoded text back to App.jsx
@@ -58,17 +70,17 @@ const BarcodeScanner = ({ onDetected }) => {
           }
           if (err && !err.toString().includes('NotFoundException')) {
             // NotFoundException is normal when no barcode is in view
-            console.error("Scanner Error:", err);
+            console.error("Scanner Error (from decodeFromVideoDevice callback):", err); // Enhanced logging
             setError("Error during scanning. Make sure the barcode is clear.");
           }
-        });
+        }, constraints); // Pass constraints here
         setIsScanning(true); // Scanning has successfully started
       } else {
         setError("No video input devices found.");
         setIsCameraActive(false); // Camera could not be activated
       }
     } catch (err) {
-      console.error("Camera access error:", err);
+      console.error("Camera access error (from startCamera catch block):", err); // Enhanced logging
       setError("Error accessing camera. Please ensure permissions are granted.");
       setIsCameraActive(false); // Camera could not be activated
     }
