@@ -68,11 +68,11 @@ const BarcodeScanner = ({ onDetected }) => {
             // Optionally stop camera after successful scan:
             // stopCamera();
           }
-          if (err && !err.toString().includes('NotFoundException')) {
-            // NotFoundException is normal when no barcode is in view
-            console.error("Scanner Error (from decodeFromVideoDevice callback):", err); // Enhanced logging
-            setError("Error during scanning. Make sure the barcode is clear.");
+          if (err && !err.name?.includes("NotFoundException")) {
+            console.error("Scanner Error:", err);
+            setError("Unexpected scanner error.");
           }
+          
         }, constraints); // Pass constraints here
         setIsScanning(true); // Scanning has successfully started
       } else {
@@ -137,18 +137,18 @@ const BarcodeScanner = ({ onDetected }) => {
 
   // Effect to clean up when component unmounts
   useEffect(() => {
-    // This effect will only handle cleanup. Starting/stopping is now controlled by buttons.
-    return () => {
-      stopCamera(); // Ensure camera is off when component unmounts
-    };
-  }, []); // Empty dependency array means this runs once on mount and cleanup on unmount
+    if (isCameraActive && videoRef.current) {
+      startCamera();
+    }
+  }, [isCameraActive]);
+  
 
 
   return (
     <div className="barcode-scanner-controls">
       <div className="camera-buttons">
         {!isCameraActive ? (
-          <button onClick={startCamera} className="camera-button start-button">Open Camera</button>
+          <button onClick={() => setIsCameraActive(true)}  className="camera-button start-button">Open Camera</button>
         ) : (
           <button onClick={stopCamera} className="camera-button stop-button">Stop Camera</button>
         )}
