@@ -1,0 +1,161 @@
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #f4f7f6;
+  color: #333;
+}
+
+.App {
+  max-width: 1000px;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2, h3 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.scanner-container {
+  margin-bottom: 30px;
+  text-align: center;
+  /* The dashed border was for the placeholder, can be removed if you like */
+  /* border: 1px dashed #ccc; */
+  padding: 20px;
+  border-radius: 5px;
+}
+
+/* This video style is now largely controlled by .scanner-video in BarcodeScanner.jsx's CSS */
+/* video {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  display: block;
+  margin: 0 auto;
+} */
+
+.scan-info {
+  background-color: #e9eff1;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.scanned-student-details {
+  background-color: #d1ecf1;
+  border-left: 5px solid #007bff;
+  padding: 15px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.student-table th, .student-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.student-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.present {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.absent {
+  color: #dc3545;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+    margin: 40px 0;
+}
+
+/* Styles for the camera control buttons */
+.barcode-scanner-controls {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.camera-buttons {
+  margin-bottom: 20px;
+  display: flex; /* Use flexbox for button layout */
+  justify-content: center; /* Center buttons horizontally */
+  flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  gap: 10px; /* Space between buttons */
+}
+
+.camera-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  /* margin: 0 5px; Removed individual margins for gap */
+  transition: background-color 0.3s ease, transform 0.1s ease; /* Added transform for hover effect */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.camera-button:hover {
+  transform: translateY(-2px); /* Lift effect on hover */
+}
+
+.start-button {
+  background-color: #28a745; /* Green */
+  color: white;
+}
+
+.start-button:hover {
+  background-color: #218838;
+}
+
+.stop-button {
+  background-color: #dc3545; /* Red */
+  color: white;
+}
+
+.stop-button:hover {
+  background-color: #c82333;
+}
+
+.upload-button {
+  background-color: #007bff; /* Blue */
+  color: white;
+  text-decoration: none; /* For label acting as button */
+  display: inline-block; /* For label acting as button */
+  /* padding, font-size, cursor, border-radius, transition, box-shadow inherited from .camera-button */
+}
+
+.upload-button:hover {
+  background-color: #0056b3;
+}
+
+/* Style for the video element within the scanner component */
+.scanner-video {
+  width: 100%;
+  max-width: 400px; /* Or whatever width you prefer */
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  display: block;
+  margin: 0 auto;
+}
