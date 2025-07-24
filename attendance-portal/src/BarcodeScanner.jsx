@@ -52,43 +52,36 @@ const BarcodeScanner = ({ onDetected }) => {
         // to let the user select a camera if multiple exist.
         const deviceId = videoInputDevices[0].deviceId;
 
-        // Define video constraints for a common resolution
+        // Define video constraints for a common resolution, prioritizing 'environment' (rear camera)
+        // Removed ideal width/height to let the browser pick optimal default, as suggested in tips
         const constraints = {
-            video: {
-              deviceId,
-              width: { ideal: 1280 }, // Higher resolution helps decode finer barcodes
-              height: { ideal: 720 },
-              facingMode: "environment"
+          video: {
+            deviceId: deviceId,
+            facingMode: "environment" // Prefer rear camera on mobile
+          }
+        };
+
+        // Added a check for videoRef.current readiness to prevent race conditions
+        if (videoRef.current && videoRef.current.readyState >= 1) {
+          codeReader.current.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
+            if (result) {
+              onDetected(result.getText()); // Send the decoded text back to App.jsx
+              // Optionally stop camera after successful scan:
+              // stopCamera();
             }
-          };
-
-          setTimeout(() => {
-            codeReader.current.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
-              if (result) {
-                onDetected(result.getText());
-              }
-              if (err && !err.toString().includes("NotFoundException")) {
-                console.error("Scanner Error:", err);
-                setError("Error during scanning. Make sure the barcode is clear.");
-              }
-            }, constraints);
-          }, 1000);
-          
-          
-
-        codeReader.current.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
-          if (result) {
-            onDetected(result.getText()); // Send the decoded text back to App.jsx
-            // Optionally stop camera after successful scan:
-            // stopCamera();
-          }
-          if (err && !err.name?.includes("NotFoundException")) {
-            console.error("Scanner Error:", err);
-            setError("Unexpected scanner error.");
-          }
-          
-        }, constraints); // Pass constraints here
-        setIsScanning(true); // Scanning has successfully started
+            if (err && !err.toString().includes('NotFoundException')) {
+              // NotFoundException is normal when no barcode is in view
+              console.error("Scanner Error (from decodeFromVideoDevice callback):", err); // Enhanced logging
+              setError("Error during scanning. Make sure the barcode is clear.");
+            }
+          }, constraints); // Pass constraints here
+          setIsScanning(true); // Scanning has successfully started
+        } else {
+          // If videoRef is not ready, try again after a short delay
+          // This addresses the "Rendering Race Condition" directly
+          console.warn("videoRef.current not ready, retrying startCamera in 100ms...");
+          setTimeout(startCamera, 100);
+        }
       } else {
         setError("No video input devices found.");
         setIsCameraActive(false); // Camera could not be activated
@@ -151,18 +144,18 @@ const BarcodeScanner = ({ onDetected }) => {
 
   // Effect to clean up when component unmounts
   useEffect(() => {
-    if (isCameraActive && videoRef.current) {
-      startCamera();
-    }
-  }, [isCameraActive]);
-  
+    // This effect will only handle cleanup. Starting/stopping is now controlled by buttons.
+    return () => {
+      stopCamera(); // Ensure camera is off when component unmounts
+    };
+  }, []); // Empty dependency array means this runs once on mount and cleanup on unmount
 
 
   return (
     <div className="barcode-scanner-controls">
       <div className="camera-buttons">
         {!isCameraActive ? (
-          <button onClick={() => setIsCameraActive(true)}  className="camera-button start-button">Open Camera</button>
+          <button onClick={startCamera} className="camera-button start-button">Open Camera</button>
         ) : (
           <button onClick={stopCamera} className="camera-button stop-button">Stop Camera</button>
         )}
