@@ -4,7 +4,8 @@ import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/
 const BarcodeScanner = ({ onDetected }) => {
   const videoRef = useRef(null);
   const imageRef = useRef(null); // Ref for our hidden image element
-  const codeReader = useRef(new BrowserMultiFormatReader());
+  const canvasRef = useRef(null); // NEW: Ref for our hidden canvas element for debugging
+  const codeReader = useRef(new BrowserMultiMultiFormatReader());
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -57,10 +58,29 @@ const BarcodeScanner = ({ onDetected }) => {
           }
         };
 
-        // NEW: Use onloadedmetadata to ensure video element is truly ready
+        // Use onloadedmetadata to ensure video element is truly ready
         const onVideoReady = () => {
           if (videoRef.current) {
             videoRef.current.removeEventListener('loadedmetadata', onVideoReady); // Remove listener to prevent multiple calls
+
+            // NEW DEBUGGING STEP: Attempt to draw video frame to hidden canvas
+            const canvas = canvasRef.current;
+            const context = canvas.getContext('2d');
+            if (videoRef.current.videoWidth > 0 && videoRef.current.videoHeight > 0) {
+              canvas.width = videoRef.current.videoWidth;
+              canvas.height = videoRef.current.videoHeight;
+              context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+              console.log("Video frame successfully drawn to hidden canvas. Stream appears valid.");
+              // You could even log a small part of the pixel data for deeper inspection if needed
+              // const imageData = context.getImageData(0, 0, 10, 10).data;
+              // console.log("Sample pixel data:", imageData);
+            } else {
+              console.warn("Video dimensions are 0, cannot draw to canvas. Stream might not be ready or valid.");
+              setError("Camera stream not providing valid dimensions. Try again.");
+              setIsCameraActive(false);
+              return; // Stop here if stream is not valid
+            }
+
             codeReader.current.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
               if (result) {
                 onDetected(result.getText());
@@ -206,6 +226,8 @@ const BarcodeScanner = ({ onDetected }) => {
 
       {/* Hidden image element for decoding from file */}
       <img ref={imageRef} style={{ display: 'none' }} alt="Barcode for scanning" />
+      {/* NEW: Hidden canvas for debugging video stream */}
+      <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
     </div>
   );
 };
